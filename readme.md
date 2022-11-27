@@ -37,6 +37,16 @@ scan("11 ? ? ? ? 22")
 fullscan("11 ? ? ? ? 22")
 ```
 
+##### Get the offset from base at the cursor position (ScreenEA)
+```
+offset()
+```
+
+##### Jump to offset from the base
+```
+offset("+deadbeef")
+```
+
 ### Authors
 - sub1to
 

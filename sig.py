@@ -1,3 +1,6 @@
+# PopPySig
+# Author: sub1to
+
 from ida import *
 import subprocess
 
@@ -51,12 +54,12 @@ def find_vtable_length(ea):
 
 
 def is_pattern_unique(pattern):
-    ea = idc.FindBinary(0, idc.SEARCH_DOWN, pattern)
+    ea = idc.FindBinary(0, idc.SEARCH_DOWN | idc.SEARCH_CASE, pattern)
 
     if ea == BADADDR:
         return -1
 
-    if idc.FindBinary(ea + 1, idc.SEARCH_DOWN, pattern) != BADADDR:
+    if idc.FindBinary(ea + 1, idc.SEARCH_DOWN | idc.SEARCH_CASE, pattern) != BADADDR:
         return 0
 
     return 1
@@ -72,17 +75,6 @@ def add_padding_to_sig(sig, count):
     for i in xrange(0, count):
         sig += "? "
     return sig
-
-
-def op_count(ea):
-    c = 0
-    idaapi.decode_insn(ea)
-    for c, v in enumerate(idaapi.cmd.Operands):
-        if v.type == idaapi.o_void:
-            return c
-        continue
-
-    return c
 
 
 def add_instruction_to_sig(sig, ea):
@@ -134,13 +126,31 @@ def sig():
     print "%x: %s" % (ea, res)
 
 def scan(pattern):
-    ea = idc.FindBinary(0, idc.SEARCH_DOWN, pattern)
-    print "Found match at %x" % ea
+    ea = idc.FindBinary(0, idc.SEARCH_DOWN | idc.SEARCH_CASE, pattern)
+    print "Found match at %x +%x" % (ea, ea - idaapi.get_imagebase())
 
 def fullscan(pattern):
     ea = 0
     while True:
-        ea = idc.FindBinary(ea + 1, idc.SEARCH_DOWN, pattern)
+        ea = idc.FindBinary(ea + 1, idc.SEARCH_DOWN | idc.SEARCH_CASE, pattern)
         if ea == BADADDR:
             break
-        print "Found match at %x" % ea
+        print "Found match at %x +%x" % (ea, ea - idaapi.get_imagebase())
+
+
+def offset(o = None):
+    if o is None:
+        ea = idc.ScreenEA()
+
+        if ea == BADADDR:
+            print "Invalid cursor position"
+            return
+
+        res = ea - idaapi.get_imagebase()
+        copy2clip("%x" % res)
+        print "%x: +%x" % (ea, res)
+    else:
+        print "%x" % (idaapi.get_imagebase() + int(o, 16))
+        idaapi.jumpto(idaapi.get_imagebase() + int(o, 16))
+
+
